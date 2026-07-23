@@ -160,3 +160,265 @@ WHAT MAKES THIS DIFFERENT?
   - Per-center week numbering — Week 1 starts from each center's first
     admission, not from a fixed calendar date, giving a more accurate
     picture of each center's journey
+
+
+=========================================================
+ADMISSION PREDICTOR
+Technical Documentation
+Version : 1.0
+=========================================================
+
+PROJECT TYPE
+------------
+Business Intelligence + Time Series Forecasting +
+Statistical Analytics + Regression-based Prediction
+
+OBJECTIVE
+---------
+Transform raw admission records into actionable business
+insights and forecast future admissions using statistical
+and machine learning techniques.
+
+=========================================================
+DATA PREPROCESSING
+=========================================================
+
+Input Columns
+-------------
+• Admission Date
+• Region
+• Center
+• Admissions
+
+Processing Pipeline
+-------------------
+1. CSV Parsing
+2. Date Standardization
+3. Academic Cycle Detection
+4. Cycle Week Calculation
+5. Missing Value Handling
+6. Weekly Aggregation
+7. Monthly Aggregation
+8. Feature Engineering
+
+Generated Features
+------------------
+Cycle Year
+Cycle Week
+Month
+Month Index
+Week Index
+Running Total
+Rolling Average
+Growth Rate
+
+=========================================================
+MATHEMATICAL MODELS
+=========================================================
+
+1. Linear Regression
+--------------------
+
+Purpose:
+Estimate admission trend over time.
+
+Equation
+
+y = β₀ + β₁x
+
+Input
+-----
+Week Number
+
+Output
+------
+Predicted Admissions
+
+
+---------------------------------------------------------
+
+2. Weighted Moving Average
+
+Purpose
+-------
+Smooth noisy weekly admissions.
+
+Formula
+
+Forecast =
+Σ(weight × value)
+/ Σ(weights)
+
+Weights
+
+0.4
+0.3
+0.2
+0.1
+
+---------------------------------------------------------
+
+3. Exponential Smoothing
+
+Formula
+
+Fₜ₊₁ =
+αYₜ
++
+(1−α)Fₜ
+
+Alpha
+
+0.30
+
+---------------------------------------------------------
+
+4. Seasonal Component
+
+Seasonal Index
+
+Current Month Average
+/
+Overall Average
+
+Used for correcting seasonal admission fluctuations.
+
+---------------------------------------------------------
+
+5. Ensemble Forecast
+
+Final Prediction
+
+25%
+Linear Regression
+
+30%
+Weighted Moving Average
+
+30%
+Exponential Smoothing
+
+15%
+Seasonality Adjustment
+
+=========================================================
+STATISTICAL ANALYSIS
+=========================================================
+
+Weekly Growth
+
+(Current − Previous)
+/ Previous ×100
+
+Rolling Mean
+
+4 Week Moving Average
+
+Median
+
+50th Percentile
+
+Standard Deviation
+
+Measures volatility
+
+Coefficient of Variation
+
+Std Dev
+/
+Mean
+
+=========================================================
+SIMILARITY ANALYSIS
+=========================================================
+
+Method
+
+Euclidean Distance
+
+Formula
+
+√Σ(xᵢ−yᵢ)²
+
+Purpose
+
+Identify centers with similar admission behaviour.
+
+=========================================================
+BOOST DETECTION
+=========================================================
+
+Weak Week Criteria
+
+Admission Share
+
+<
+Overall Average −10%
+
+Boost Required
+
+Expected − Actual
+
+=========================================================
+MODEL EVALUATION
+=========================================================
+
+Regression Metrics
+
+R² Score
+MAE
+RMSE
+MAPE
+
+Example Format
+--------------
+
+Linear Regression
+
+R²    : ______
+MAE   : ______
+RMSE  : ______
+MAPE  : ______
+
+Weighted Moving Average
+
+MAE   : ______
+RMSE  : ______
+MAPE  : ______
+
+Exponential Smoothing
+
+MAE   : ______
+RMSE  : ______
+MAPE  : ______
+
+Ensemble Model
+
+R²    : ______
+MAE   : ______
+RMSE  : ______
+MAPE  : ______
+
+=========================================================
+TECHNOLOGIES
+=========================================================
+
+HTML5
+CSS3
+Vanilla JavaScript
+Google Sheets CSV API
+
+=========================================================
+OUTPUT
+=========================================================
+
+• Weekly Analytics
+• Monthly Projection
+• Center Ranking
+• Similarity Mapping
+• Boost Suggestions
+• Trend Analysis
+• Forecast Dashboard
+• Executive Report
+
+=========================================================
