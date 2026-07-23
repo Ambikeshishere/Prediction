@@ -23,16 +23,18 @@ function toggleTheme() {
   if (saved) document.documentElement.setAttribute('data-theme', saved);
 })();
 
-// ── Auto-load CSV ───────────────────────────────────────────
+// ── Auto-load CSV from Google Sheets ────────────────────────
+var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQCK-TyKXcgchXuSX3yxrNLaojfnfgAm-bH6E4vcOnng3aRMeHGuo65Zcq1PKbmSoEqulP-NFKRHeXd/pub?gid=0&single=true&output=csv';
+
 (function autoLoadCSV() {
   showLoading(true, 'Loading admission data...');
-  fetch('data.csv').then(function(r) {
-    if (!r.ok) throw new Error('Data file not found');
+  fetch(CSV_URL).then(function(r) {
+    if (!r.ok) throw new Error('Data fetch failed');
     return r.text();
   }).then(function(csv) {
     parseCSV(csv);
     document.getElementById('uploadSection').style.display = 'none';
-    document.getElementById('fileInfo').textContent = 'Auto-loaded: ' + RAW.length + ' records';
+    document.getElementById('fileInfo').textContent = 'Auto-loaded: ' + RAW.length + ' records (live from Google Sheets)';
     document.getElementById('fileInfo').classList.add('show');
     document.getElementById('controlsBar').style.display = 'flex';
     buildMultiSelects();
