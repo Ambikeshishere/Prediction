@@ -1,0 +1,162 @@
+ADMISSION PREDICTOR — Project Description
+==========================================
+
+WHAT IS THIS PROJECT?
+---------------------
+Admission Predictor is a web-based analytics dashboard that takes raw admission
+data (date, region, center, number of admissions) and transforms it into a
+complete business intelligence report. It shows weekly trends, forecasts monthly
+totals, identifies underperforming weeks, compares centers against each other,
+and generates a full business analysis report — all in the browser with no
+server or database required.
+
+It is designed for education business analysts, operations teams, and
+decision-makers who need quick, clear answers from their admission data
+without relying on data engineers or expensive BI tools.
+
+
+HOW DOES IT WORK?
+------------------
+1. DATA LOADING
+   The app fetches admission data directly from a published Google Sheets CSV
+   link every time the page loads. This means the data is always live — when
+   someone updates the Google Sheet, the dashboard reflects the new numbers on
+   the next page refresh. No manual file uploads needed for day-to-day use.
+
+2. DATA PROCESSING
+   Raw CSV rows are parsed into structured records. Each record gets:
+   - A cycle year (Sep-Aug academic cycle)
+   - A cycle week number (Week 1 = first admission date of that center,
+     so every center's timeline starts independently)
+
+3. ANALYSIS ENGINE
+   The app runs multiple analyses in sequence:
+   
+   a) Monthly Aggregation — Groups admissions by calendar month to compute
+      totals, averages, medians, and month-over-month growth rates.
+   
+   b) Weekly Timeline — Groups admissions by cycle week across all selected
+      centers. Computes week-over-week change and a rolling 4-week average
+      to smooth out noise.
+   
+   c) Center-wise Analysis — Breaks down each center's admissions by week.
+      Identifies which weeks a center underperforms or overperforms compared
+      to the overall average across all centers.
+   
+   d) Similarity Matching — Converts each center's weekly pattern into a
+      percentage vector (what share of total admissions happened in each
+      week). Then computes Euclidean distance between all center pairs to
+      find which centers behave most similarly.
+   
+   e) Boost Detection — Flags weeks where a center's admission share is
+      more than 10% below the overall average. Quantifies the gap and
+      suggests how many additional admissions are needed to recover.
+   
+   f) Month Projection — For the current calendar month, calculates a daily
+      run rate from data collected so far and projects the month-end total.
+      Also breaks it down week-by-week within the month.
+   
+   g) Ensemble Prediction — Uses four statistical models to forecast future
+      months:
+      - Linear Regression (25% weight)
+      - Weighted Moving Average (30% weight)
+      - Exponential Smoothing (30% weight)
+      - Seasonal Decomposition (15% weight)
+      The combined ensemble is more robust than any single model.
+
+4. REPORT GENERATION
+   All analyses are compiled into a structured business report with:
+   - Executive Summary (key metrics at a glance)
+   - Weekly Timeline (every week with date range)
+   - Center Analysis (per-center weekly tables)
+   - Boost Strategy (visual comparison cards)
+   - Center Comparison (big-number summary cards)
+   - Forecast (current month projection with progress bar)
+   - Risk Assessment (trend + volatility score)
+
+5. INTERACTIVE TABS
+   Below the report, six tabs provide deeper drill-down:
+   - Weekly Breakdown (full table with bar charts)
+   - Month Projection (current month week-by-week)
+   - Boost Strategy (center-wise weak weeks)
+   - Center Comparison (ranked table with similarity scores)
+   - Forecast (prediction table with confidence intervals)
+   - Raw Data (searchable, sortable record-level table)
+
+
+WHAT CAN THIS PROJECT DO?
+--------------------------
+Immediate capabilities:
+  - Automatically load live admission data from Google Sheets
+  - Show total admissions, monthly average, median, and trend at a glance
+  - Display every cycle week's admissions with date ranges and growth rates
+  - Project how many admissions the current month will end with
+  - Compare the latest week against the previous week visually
+  - Count how many centers follow similar admission patterns
+  - Identify which weeks are underperforming across all centers
+  - Forecast the next month's admissions using four statistical models
+  - Generate a printable business analysis report
+  - Work in both light and dark themes
+  - Filter data by region and center using multi-select dropdowns
+  - Load on any device — desktop, tablet, or mobile
+
+Business value:
+  - Operations teams can spot weak weeks early and plan marketing pushes
+  - Center managers can see how their center compares to similar centers
+  - Leadership can get a quick month-end forecast without waiting for
+    manual reports
+  - The live Google Sheets connection means the data is always current
+    without any deployment or backend changes
+  - The visual cards and plain-English summaries make the report
+    accessible to anyone regardless of technical background
+
+
+WHY WAS THIS PROJECT CREATED?
+------------------------------
+This project was created to solve a specific business problem: understanding
+admission patterns across multiple education centers and predicting future
+admissions without relying on complex BI tools or data pipelines.
+
+The core need was:
+  1. A simple, visual way to see what is happening RIGHT NOW with admissions
+  2. A forecast of where the current month will end up
+  3. A comparison of which centers are performing similarly so patterns
+     can be studied and replicated
+  4. Early warning signals when a week or center is falling behind
+
+Traditional approaches (Excel sheets, manual reports, data analyst requests)
+were too slow for daily decision-making. This tool was built to give
+instant, actionable answers the moment admission data is available.
+
+The design philosophy was simplicity:
+  - No backend server to maintain
+  - No database to manage
+  - No build step or compilation
+  - Pure HTML, CSS, and JavaScript that runs anywhere
+  - Google Sheets as the single source of truth (easy for non-technical
+    team members to update)
+  - Visual cards and progress bars instead of dense tables
+  - Plain English summaries instead of statistical jargon
+  - The report should be understandable by anyone at a glance
+
+
+WHO IS THIS FOR?
+-----------------
+  - Business Analysts who need quick answers from admission data
+  - Operations Managers who track weekly admission performance
+  - Center Heads who want to see how their center compares
+  - Leadership Teams who need monthly forecasts for planning
+  - Anyone who works with education admission data and wants
+    a clear, visual dashboard without technical overhead
+
+
+WHAT MAKES THIS DIFFERENT?
+----------------------------
+  - Zero setup — just open the URL and data loads automatically
+  - Live data — connected to Google Sheets, always up to date
+  - No backend — runs entirely in the browser
+  - Visual-first — big numbers, progress bars, color coding
+  - Self-explanatory — designed so anyone can understand at a glance
+  - Per-center week numbering — Week 1 starts from each center's first
+    admission, not from a fixed calendar date, giving a more accurate
+    picture of each center's journey
