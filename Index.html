@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admission Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Admission Predictor</h1>
+    <div class="subtitle">September - August Cycle  |  Weekly Analysis  |  Center Comparison  |  Forecast</div>
+  </div>
+  <div class="header-actions">
+    <span class="badge">AI POWERED</span>
+    <button class="btn btn-ghost" onclick="window.print()">Print Report</button>
+    <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+      <div class="sun-rays"></div>
+      <div class="toggle-thumb">
+        <span class="toggle-sun">&#9728;</span>
+        <span class="toggle-moon">&#9790;</span>
+      </div>
+      <div class="stars"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="upload-section" id="uploadSection">
+  <div class="upload-card">
+    <h2>Upload Your Data</h2>
+    <p>CSV with headers: <strong>admission_date, region, center, admissions</strong></p>
+    <button class="btn btn-primary" onclick="document.getElementById('csvFile').click()" style="margin-top:16px">Choose CSV File</button>
+    <input type="file" id="csvFile" accept=".csv" style="display:none">
+    <div class="or-divider">or</div>
+    <div class="url-input-group">
+      <input type="text" id="csvUrl" placeholder="Paste a public Google Sheets CSV URL...">
+      <button class="btn btn-primary" onclick="loadFromUrl()">Fetch</button>
+    </div>
+    <div class="file-info" id="fileInfo"></div>
+  </div>
+</div>
+
+<div class="controls" id="controlsBar">
+  <div>
+    <label>Regions</label>
+    <div class="multi-select" id="regionMS">
+      <div class="ms-trigger" onclick="toggleMS('regionMS')">All Regions</div>
+      <div class="ms-dropdown" id="regionDropdown"></div>
+    </div>
+  </div>
+  <div>
+    <label>Centers</label>
+    <div class="multi-select" id="centerMS">
+      <div class="ms-trigger" onclick="toggleMS('centerMS')">All Centers</div>
+      <div class="ms-dropdown" id="centerDropdown"></div>
+    </div>
+  </div>
+  <div>
+    <label>Forecast Months</label>
+    <input type="number" id="futureMonths" value="6" min="1" max="36">
+  </div>
+  <div style="display:flex;gap:8px;align-items:flex-end">
+    <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">Analyze & Predict</button>
+    <button class="btn btn-outline" onclick="resetFilters()">Reset</button>
+  </div>
+</div>
+
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Processing data...</div>
+  <div class="loading-sub" id="loadingSub">Building models and weekly analysis</div>
+</div>
+
+<div class="error-banner" id="errorBanner"><strong>Error:</strong> <span id="errorMsg"></span></div>
+
+<div class="dashboard" id="dashboard">
+
+  <div class="report-card">
+    <div class="report-card-header">
+      <h2>Business Analysis Report</h2>
+      <span class="report-tag">AI GENERATED</span>
+    </div>
+    <div class="report-card-body" id="aiReportContent"></div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Weekly Admissions Trend</h3>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Model Comparison</h3>
+      <canvas id="modelChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Regional Distribution</h3>
+      <canvas id="regionChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Monthly Seasonal Pattern</h3>
+      <canvas id="seasonChart"></canvas>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><h2>Detailed Analysis</h2></div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'weekly')">Weekly Breakdown</div>
+      <div class="tab" onclick="switchTab(this,'projection')">Month Projection</div>
+      <div class="tab" onclick="switchTab(this,'boost')">Boost Strategy</div>
+      <div class="tab" onclick="switchTab(this,'compare')">Center Comparison</div>
+      <div class="tab" onclick="switchTab(this,'predictions')">Forecast</div>
+      <div class="tab" onclick="switchTab(this,'rawdata')">Raw Data</div>
+    </div>
+    <div id="tab-weekly" class="tab-content active"></div>
+    <div id="tab-projection" class="tab-content"></div>
+    <div id="tab-boost" class="tab-content"></div>
+    <div id="tab-compare" class="tab-content"></div>
+    <div id="tab-predictions" class="tab-content"></div>
+    <div id="tab-rawdata" class="tab-content"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
