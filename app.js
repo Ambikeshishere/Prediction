@@ -242,7 +242,7 @@ document.addEventListener('click', function(e) {
 
 function resetFilters() {
   selectedRegions = []; selectedCenters = [];
-  document.getElementById('futureMonths').value = 6;
+  document.getElementById('futureMonths').value = 1;
   document.getElementById('dashboard').classList.remove('show');
   buildMultiSelects();
 }
@@ -292,7 +292,7 @@ function runAnalysis() {
       var allWca = computeWeeklyCenterAnalysis(RAW); // ALL centers for similarity
       var cc = computeCenterComparison(data, allWca);
       var boost = generateBoostRecs(wca, cc);
-      var pred = predictFuture(monthlyArr, months);
+      var pred = predictFuture(monthlyArr, 1);
       var projection = computeMonthProjection(data, monthlyArr);
 
       var result = {
@@ -683,45 +683,73 @@ function generateAIReport(d) {
   });
   rep.centerAnalysis = caHtml;
 
-  // Boost Strategy - Current week vs last week analysis
+  // Boost Strategy - Visual cards, anyone can understand at a glance
   var bsHtml = '';
-  if (proj && proj.weeks && proj.weeks.length > 0) {
-    var curWk = proj.currentWeek;
-    var curWeekData = null, prevWeekData = null;
-    proj.weeks.forEach(function(w) {
-      if (w.week === curWk) curWeekData = w;
-      if (w.week === curWk - 1) prevWeekData = w;
-    });
-    if (curWeekData && prevWeekData && prevWeekData.total > 0) {
-      var gap = curWeekData.total - prevWeekData.total;
-      var gapPct = Math.round(gap / prevWeekData.total * 10000) / 100;
-      var daysLeft = proj.daysInMonth - proj.daysElapsed;
-      var neededPerDay = daysLeft > 0 ? Math.round((proj.projectedMonthEnd - proj.totalSoFar) / daysLeft) : 0;
-      var statusClass = gap >= 0 ? 'good' : 'bad';
-      bsHtml = '<table><thead><tr><th>Metric</th><th class="num-cell">Value</th></tr></thead><tbody>';
-      bsHtml += '<tr><td>Week ' + curWk + ' (so far)</td><td class="num-cell"><strong>' + fmt(curWeekData.total) + ' admissions</strong></td></tr>';
-      bsHtml += '<tr><td>Week ' + (curWk - 1) + ' (last week)</td><td class="num-cell"><strong>' + fmt(prevWeekData.total) + ' admissions</strong></td></tr>';
-      bsHtml += '<tr><td>Gap (current vs last)</td><td class="num-cell ' + statusClass + '"><strong>' + (gap >= 0 ? '+' : '') + fmt(gap) + ' (' + (gapPct >= 0 ? '+' : '') + gapPct + '%)</strong></td></tr>';
-      bsHtml += '<tr><td>Daily avg so far</td><td class="num-cell">' + fmt(proj.dailyAvg) + ' /day</td></tr>';
-      bsHtml += '<tr><td>Days remaining</td><td class="num-cell">' + daysLeft + ' days</td></tr>';
-      bsHtml += '<tr><td>Required rate to reach projection</td><td class="num-cell"><strong>' + fmt(neededPerDay) + ' /day</strong></td></tr>';
-      if (gap < 0) {
-        var catchUpPerDay = Math.round((Math.abs(gap) + neededPerDay * daysLeft) / daysLeft);
-        bsHtml += '<tr><td>Required rate to catch up + project</td><td class="num-cell" style="color:var(--red)"><strong>' + fmt(catchUpPerDay) + ' /day</strong></td></tr>';
-      }
-      bsHtml += '</tbody></table>';
-      if (gap < 0) {
-        bsHtml += '<p style="margin-top:12px;font-size:13px;color:var(--red)">Week ' + curWk + ' is <strong>' + Math.abs(gapPct) + '% behind</strong> last week. Daily rate needs to increase to <strong>' + fmt(Math.round((Math.abs(gap) + neededPerDay * daysLeft) / daysLeft)) + '/day</strong> to meet projection.</p>';
-      } else {
-        bsHtml += '<p style="margin-top:12px;font-size:13px;color:var(--green)">Week ' + curWk + ' is <strong>' + gapPct + '% ahead</strong> of last week. On track.</p>';
-      }
+  var tl = wt.timeline;
+  if (tl.length >= 2) {
+    var lastWk = tl[tl.length - 1];
+    var prevWk = tl[tl.length - 2];
+    var gap = lastWk.total - prevWk.total;
+    var gapPct = prevWk.total > 0 ? Math.round(gap / prevWk.total * 10000) / 100 : 0;
+    var isUp = gap >= 0;
+    var arrow = isUp ? '&#9650;' : '&#9660;';
+    var color = isUp ? 'var(--green)' : 'var(--red)';
+    var bgColor = isUp ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)';
+    var barPct = prevWk.total > 0 ? Math.min(100, Math.round(lastWk.total / prevWk.total * 100)) : 0;
+    var barColor = isUp ? 'var(--green)' : 'var(--red)';
+
+    // Main visual: two big cards side by side
+    bsHtml += '<div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:center;margin-bottom:20px">';
+
+    // Previous week card
+    bsHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
+    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Pichla Hafta</div>';
+    bsHtml += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px"><strong>' + prevWk.label + '</strong> (' + prevWk.dateRange + ')</div>';
+    bsHtml += '<div style="font-size:36px;font-weight:800;color:var(--text);line-height:1">' + fmt(prevWk.total) + '</div>';
+    bsHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
+    bsHtml += '</div>';
+
+    // Arrow
+    bsHtml += '<div style="text-align:center">';
+    bsHtml += '<div style="font-size:32px;color:' + color + ';line-height:1">' + arrow + '</div>';
+    bsHtml += '<div style="font-size:14px;font-weight:700;color:' + color + '">' + (gapPct >= 0 ? '+' : '') + gapPct + '%</div>';
+    bsHtml += '</div>';
+
+    // Latest week card
+    bsHtml += '<div style="background:' + bgColor + ';border:1px solid ' + color + ';border-radius:12px;padding:20px;text-align:center">';
+    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Aakhri Hafta</div>';
+    bsHtml += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px"><strong>' + lastWk.label + '</strong> (' + lastWk.dateRange + ')</div>';
+    bsHtml += '<div style="font-size:36px;font-weight:800;color:' + color + ';line-height:1">' + fmt(lastWk.total) + '</div>';
+    bsHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
+    bsHtml += '</div>';
+
+    bsHtml += '</div>';
+
+    // Progress bar
+    bsHtml += '<div style="margin-bottom:16px">';
+    bsHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);margin-bottom:6px"><span>Target: ' + fmt(prevWk.total) + '</span><span>Got: ' + fmt(lastWk.total) + ' (' + barPct + '%)</span></div>';
+    bsHtml += '<div style="background:var(--border-light);border-radius:8px;height:12px;overflow:hidden">';
+    bsHtml += '<div style="background:' + barColor + ';height:100%;width:' + Math.min(100, barPct) + '%;border-radius:8px;transition:width 0.5s"></div>';
+    bsHtml += '</div>';
+    bsHtml += '</div>';
+
+    // Plain language summary
+    if (isUp) {
+      bsHtml += '<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
+      bsHtml += '<span style="color:var(--green);font-weight:700">&#10003; Accha chal raha hai!</span> ';
+      bsHtml += 'Is hafte <strong>' + fmt(lastWk.total) + '</strong> admissions aaye jo pichle hafte se <strong>' + fmt(Math.abs(gap)) + ' zyada</strong> hain.';
+      bsHtml += '</div>';
     } else {
-      bsHtml = '<p style="color:var(--text-secondary)">Not enough weekly data for current week comparison.</p>';
+      bsHtml += '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
+      bsHtml += '<span style="color:var(--red);font-weight:700">&#9888; Dhyaan dena hai!</span> ';
+      bsHtml += 'Is hafte sirf <strong>' + fmt(lastWk.total) + '</strong> admissions aaye jo pichle hafte se <strong>' + fmt(Math.abs(gap)) + ' kam</strong> hain. ';
+      bsHtml += 'Agla hafte <strong>' + fmt(lastWk.total + Math.abs(gap)) + '</strong> admissions chahiye taaki wapas track pe aaye.';
+      bsHtml += '</div>';
     }
   }
   rep.boostStrategy = bsHtml;
 
-  // Center Comparison - Total centers + similar count
+  // Center Comparison - Visual, simple
   var totalCenters = d.cc.rankings.length;
   var similarCount = 0;
   var threshold = 70;
@@ -729,26 +757,79 @@ function generateAIReport(d) {
     if (d.cc.mostSimilar[c].similarity >= threshold) similarCount++;
   });
   var simPct = totalCenters > 0 ? Math.round(similarCount / totalCenters * 100) : 0;
-  var cmpHtml = '<table><thead><tr><th>Metric</th><th class="num-cell">Value</th></tr></thead><tbody>';
-  cmpHtml += '<tr><td>Total centers</td><td class="num-cell"><strong>' + totalCenters + '</strong></td></tr>';
-  cmpHtml += '<tr><td>Centers behaving similarly (>=' + threshold + '% match)</td><td class="num-cell"><strong>' + similarCount + ' (' + simPct + '%)</strong></td></tr>';
-  cmpHtml += '<tr><td>Avg admissions/center</td><td class="num-cell">' + fmt(d.cc.overall.avgPerCenter) + '</td></tr>';
-  cmpHtml += '<tr><td>Total admissions (all centers)</td><td class="num-cell">' + fmt(d.cc.overall.total) + '</td></tr>';
-  cmpHtml += '</tbody></table>';
-  if (similarCount > 0) {
-    cmpHtml += '<p style="margin-top:12px;font-size:13px;color:var(--text-secondary)"><strong>' + similarCount + ' centers</strong> (' + simPct + '%) show similar admission patterns across the cycle.</p>';
-  }
+
+  // Big number cards
+  cmpHtml = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">';
+  cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Kul Centers</div>';
+  cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--text);line-height:1">' + totalCenters + '</div>';
+  cmpHtml += '</div>';
+
+  cmpHtml += '<div style="background:rgba(26,86,219,0.08);border:1px solid rgba(26,86,219,0.2);border-radius:12px;padding:20px;text-align:center">';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Jaisa Behavior Hai</div>';
+  cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--primary);line-height:1">' + similarCount + '</div>';
+  cmpHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + simPct + '% centers</div>';
+  cmpHtml += '</div>';
+
+  cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Avg Har Center</div>';
+  cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--text);line-height:1">' + fmt(d.cc.overall.avgPerCenter) + '</div>';
+  cmpHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
+  cmpHtml += '</div>';
+  cmpHtml += '</div>';
+
+  // Progress bar for similarity
+  cmpHtml += '<div style="margin-bottom:16px">';
+  cmpHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);margin-bottom:6px"><span>Similar centers</span><span>' + similarCount + ' / ' + totalCenters + ' (' + simPct + '%)</span></div>';
+  cmpHtml += '<div style="background:var(--border-light);border-radius:8px;height:12px;overflow:hidden">';
+  cmpHtml += '<div style="background:var(--primary);height:100%;width:' + simPct + '%;border-radius:8px;transition:width 0.5s"></div>';
+  cmpHtml += '</div>';
+  cmpHtml += '</div>';
+
+  // Plain language
+  cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
+  cmpHtml += 'Total <strong>' + totalCenters + ' centers</strong> hain jismein se <strong>' + similarCount + ' (' + simPct + '%)</strong> centers ka admission pattern ek jaisa hai.';
+  cmpHtml += '</div>';
   rep.centerComparison = cmpHtml;
 
-  // Forecast as HTML table
+  // Forecast - Current month end prediction
   var piHtml = '';
-  if (p.predictions.length > 0) {
-    piHtml = '<table><thead><tr><th>Month</th><th class="num-cell">Predicted</th><th class="num-cell">Lower</th><th class="num-cell">Upper</th></tr></thead><tbody>';
-    p.predictions.forEach(function(pr) {
-      piHtml += '<tr><td><strong>' + pr.month + '</strong></td><td class="num-cell"><strong>' + fmt(pr.predicted) + '</strong></td><td class="num-cell">' + fmt(pr.lower) + '</td><td class="num-cell">' + fmt(pr.upper) + '</td></tr>';
-    });
-    var tp = p.predictions.reduce(function(a, b) { return a + b.predicted; }, 0);
-    piHtml += '</tbody><tfoot><tr><td>Total</td><td class="num-cell"><strong>' + fmt(tp) + '</strong></td><td class="num-cell">-</td><td class="num-cell">-</td></tr></tfoot></table>';
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (proj) {
+    var now = new Date();
+    var fullMonthName = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+    var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var monthEndDate = lastDay + ' ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
+    var soFar = proj.totalSoFar;
+    var projected = proj.projectedMonthEnd;
+    var daysDone = proj.daysElapsed;
+    var daysTotal = proj.daysInMonth;
+
+    piHtml += '<div style="background:linear-gradient(135deg,rgba(26,86,219,0.06),rgba(52,209,120,0.06));border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;margin-bottom:16px">';
+    piHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Is Mahine Ka Andaza</div>';
+    piHtml += '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px">' + fullMonthName + '</div>';
+    piHtml += '<div style="font-size:52px;font-weight:800;color:var(--primary);line-height:1;margin-bottom:8px">' + fmt(projected) + '</div>';
+    piHtml += '<div style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px">total admissions honge ' + monthEndDate + ' tak</div>';
+    piHtml += '<div style="display:flex;justify-content:center;gap:32px;font-size:13px;color:var(--text-secondary)">';
+    piHtml += '<div>Abhi tak: <strong>' + fmt(soFar) + '</strong></div>';
+    piHtml += '<div>Din bache: <strong>' + (daysTotal - daysDone) + '</strong></div>';
+    piHtml += '<div>Daily avg: <strong>' + fmt(proj.dailyAvg) + '</strong></div>';
+    piHtml += '</div>';
+    piHtml += '</div>';
+
+    // Progress bar
+    var progressPct = daysTotal > 0 ? Math.round(daysDone / daysTotal * 100) : 0;
+    var admPct = projected > 0 ? Math.round(soFar / projected * 100) : 0;
+    piHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:12px">';
+    piHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);margin-bottom:6px"><span>Din: ' + daysDone + '/' + daysTotal + ' (' + progressPct + '%)</span><span>Admissions: ' + fmt(soFar) + '/' + fmt(projected) + ' (' + admPct + '%)</span></div>';
+    piHtml += '<div style="background:var(--border-light);border-radius:8px;height:10px;overflow:hidden">';
+    piHtml += '<div style="background:var(--primary);height:100%;width:' + admPct + '%;border-radius:8px;transition:width 0.5s"></div>';
+    piHtml += '</div>';
+    piHtml += '</div>';
+
+    piHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:12px 18px;font-size:14px;color:var(--text);text-align:center">';
+    piHtml += '<strong>' + monthEndDate + '</strong> ko ye mahina khatam hoga. Us waqt tak lagbhag <strong>' + fmt(projected) + '</strong> admissions honge.';
+    piHtml += '</div>';
   }
   rep.predictions = piHtml;
 
@@ -771,7 +852,13 @@ function renderDashboard(d) {
 
 function renderStats(d) {
   var s = d.stats, g = d.growth, p = d.predictions, wt = d.weeklyTimeline, proj = d.projection;
-  var tp = p.predictions.length > 0 ? p.predictions.reduce(function(a, b) { return a + b.predicted; }, 0) : 0;
+  var tp = p.predictions.length > 0 ? p.predictions[0].predicted : 0;
+  var nextMonthLabel = '';
+  if (p.predictions.length > 0) {
+    var mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mp = p.predictions[0].month.split('-');
+    nextMonthLabel = mn[parseInt(mp[1],10)-1] + ' ' + mp[0];
+  }
   var wc = 0; Object.keys(d.boost).forEach(function(c) { wc += d.boost[c].weakWeeks.length; });
   var tc = g.trend === 'growing' ? 'trend-up' : g.trend === 'declining' ? 'trend-down' : 'trend-neutral';
 
@@ -782,7 +869,13 @@ function renderStats(d) {
   h += sc('Peak Month', s.maxMonth, fmt(s.max) + ' admissions');
   h += sc('Weekly Avg', fmt(wt.avgWeekly), wt.totalWeeks + ' weeks');
   if (proj) h += sc('Month Projection', fmt(proj.projectedMonthEnd), proj.currentMonth + ' end est.', 'tag-predict');
-  h += sc('Forecast', fmt(tp), p.predictions.length + ' months', 'tag-predict');
+  var monthNamesShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var curMonthShort = '';
+  if (proj) {
+    var cm = proj.currentMonth.split('-');
+    curMonthShort = monthNamesShort[parseInt(cm[1],10)-1] + ' ' + cm[0];
+  }
+  h += sc('Forecast', proj ? fmt(proj.projectedMonthEnd) : '-', proj ? curMonthShort + ' end est.' : 'No data', 'tag-predict');
   if (wc > 0) h += sc('Weak Weeks', String(wc), 'Needs attention', 'tag-boost');
   document.getElementById('statsRow').innerHTML = h;
 }
