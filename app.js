@@ -64,7 +64,7 @@ document.getElementById('csvFile').addEventListener('change', function(e) {
 
 function loadFromUrl() {
   var url = document.getElementById('csvUrl').value.trim();
-  if (!url) { showError('Pehle URL daalo.'); return; }
+  if (!url) { showError('Please enter a URL first.'); return; }
   showLoading(true, 'Fetching CSV...');
   fetch(url).then(function(r) { return r.text(); }).then(function(csv) {
     parseCSV(csv);
@@ -74,7 +74,7 @@ function loadFromUrl() {
     document.getElementById('controlsBar').style.display = 'flex';
     buildMultiSelects();
     showLoading(false);
-  }).catch(function(e) { showLoading(false); showError('URL se data load nahi hua.'); });
+  }).catch(function(e) { showLoading(false); showError('Failed to load data from URL.'); });
 }
 
 // ── CSV Parser ──────────────────────────────────────────────
@@ -282,7 +282,7 @@ function runAnalysis() {
   setTimeout(function() {
     try {
       var data = filterData();
-      if (data.length === 0) throw new Error('Selected filters mein koi data nahi hai.');
+      if (data.length === 0) throw new Error('No data found for the selected filters.');
 
       var monthly = aggregateByMonth(data);
       var monthlyArr = Object.keys(monthly).sort().map(function(k) { return { month: k, admissions: monthly[k] }; });
@@ -705,7 +705,7 @@ function generateAIReport(d) {
 
     // Previous week card
     bsHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
-    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Pichla Hafta</div>';
+    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Previous Week</div>';
     bsHtml += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px"><strong>' + prevWk.label + '</strong> (' + prevWk.dateRange + ')</div>';
     bsHtml += '<div style="font-size:36px;font-weight:800;color:var(--text);line-height:1">' + fmt(prevWk.total) + '</div>';
     bsHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
@@ -719,7 +719,7 @@ function generateAIReport(d) {
 
     // Latest week card
     bsHtml += '<div style="background:' + bgColor + ';border:1px solid ' + color + ';border-radius:12px;padding:20px;text-align:center">';
-    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Aakhri Hafta</div>';
+    bsHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Latest Week</div>';
     bsHtml += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px"><strong>' + lastWk.label + '</strong> (' + lastWk.dateRange + ')</div>';
     bsHtml += '<div style="font-size:36px;font-weight:800;color:' + color + ';line-height:1">' + fmt(lastWk.total) + '</div>';
     bsHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
@@ -738,14 +738,14 @@ function generateAIReport(d) {
     // Plain language summary
     if (isUp) {
       bsHtml += '<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
-      bsHtml += '<span style="color:var(--green);font-weight:700">&#10003; Accha chal raha hai!</span> ';
-      bsHtml += 'Is hafte <strong>' + fmt(lastWk.total) + '</strong> admissions aaye jo pichle hafte se <strong>' + fmt(Math.abs(gap)) + ' zyada</strong> hain.';
+      bsHtml += '<span style="color:var(--green);font-weight:700">&#10003; On Track!</span> ';
+      bsHtml += 'This week <strong>' + fmt(lastWk.total) + '</strong> admissions came in, which is <strong>' + fmt(Math.abs(gap)) + ' more</strong> than last week.';
       bsHtml += '</div>';
     } else {
       bsHtml += '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
-      bsHtml += '<span style="color:var(--red);font-weight:700">&#9888; Dhyaan dena hai!</span> ';
-      bsHtml += 'Is hafte sirf <strong>' + fmt(lastWk.total) + '</strong> admissions aaye jo pichle hafte se <strong>' + fmt(Math.abs(gap)) + ' kam</strong> hain. ';
-      bsHtml += 'Agla hafte <strong>' + fmt(lastWk.total + Math.abs(gap)) + '</strong> admissions chahiye taaki wapas track pe aaye.';
+      bsHtml += '<span style="color:var(--red);font-weight:700">&#9888; Attention Needed!</span> ';
+      bsHtml += 'This week only <strong>' + fmt(lastWk.total) + '</strong> admissions came in, which is <strong>' + fmt(Math.abs(gap)) + ' less</strong> than last week. ';
+      bsHtml += 'Next week needs <strong>' + fmt(lastWk.total + Math.abs(gap)) + '</strong> admissions to get back on track.';
       bsHtml += '</div>';
     }
   }
@@ -763,18 +763,18 @@ function generateAIReport(d) {
   // Big number cards
   cmpHtml = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">';
   cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
-  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Kul Centers</div>';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Total Centers</div>';
   cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--text);line-height:1">' + totalCenters + '</div>';
   cmpHtml += '</div>';
 
   cmpHtml += '<div style="background:rgba(26,86,219,0.08);border:1px solid rgba(26,86,219,0.2);border-radius:12px;padding:20px;text-align:center">';
-  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Jaisa Behavior Hai</div>';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Similar Pattern</div>';
   cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--primary);line-height:1">' + similarCount + '</div>';
   cmpHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + simPct + '% centers</div>';
   cmpHtml += '</div>';
 
   cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">';
-  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Avg Har Center</div>';
+  cmpHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Avg per Center</div>';
   cmpHtml += '<div style="font-size:40px;font-weight:800;color:var(--text);line-height:1">' + fmt(d.cc.overall.avgPerCenter) + '</div>';
   cmpHtml += '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">admissions</div>';
   cmpHtml += '</div>';
@@ -790,7 +790,7 @@ function generateAIReport(d) {
 
   // Plain language
   cmpHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:14px 18px;font-size:14px;color:var(--text)">';
-  cmpHtml += 'Total <strong>' + totalCenters + ' centers</strong> hain jismein se <strong>' + similarCount + ' (' + simPct + '%)</strong> centers ka admission pattern ek jaisa hai.';
+  cmpHtml += 'Out of <strong>' + totalCenters + ' total centers</strong>, <strong>' + similarCount + ' (' + simPct + '%)</strong> centers show a similar admission pattern.';
   cmpHtml += '</div>';
   rep.centerComparison = cmpHtml;
 
@@ -808,13 +808,13 @@ function generateAIReport(d) {
     var daysTotal = proj.daysInMonth;
 
     piHtml += '<div style="background:linear-gradient(135deg,rgba(26,86,219,0.06),rgba(52,209,120,0.06));border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;margin-bottom:16px">';
-    piHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Is Mahine Ka Andaza</div>';
+    piHtml += '<div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Current Month Forecast</div>';
     piHtml += '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px">' + fullMonthName + '</div>';
     piHtml += '<div style="font-size:52px;font-weight:800;color:var(--primary);line-height:1;margin-bottom:8px">' + fmt(projected) + '</div>';
-    piHtml += '<div style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px">total admissions honge ' + monthEndDate + ' tak</div>';
+    piHtml += '<div style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px">total projected admissions by ' + monthEndDate + '</div>';
     piHtml += '<div style="display:flex;justify-content:center;gap:32px;font-size:13px;color:var(--text-secondary)">';
-    piHtml += '<div>Abhi tak: <strong>' + fmt(soFar) + '</strong></div>';
-    piHtml += '<div>Din bache: <strong>' + (daysTotal - daysDone) + '</strong></div>';
+    piHtml += '<div>So Far: <strong>' + fmt(soFar) + '</strong></div>';
+    piHtml += '<div>Days Left: <strong>' + (daysTotal - daysDone) + '</strong></div>';
     piHtml += '<div>Daily avg: <strong>' + fmt(proj.dailyAvg) + '</strong></div>';
     piHtml += '</div>';
     piHtml += '</div>';
@@ -823,14 +823,14 @@ function generateAIReport(d) {
     var progressPct = daysTotal > 0 ? Math.round(daysDone / daysTotal * 100) : 0;
     var admPct = projected > 0 ? Math.round(soFar / projected * 100) : 0;
     piHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:12px">';
-    piHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);margin-bottom:6px"><span>Din: ' + daysDone + '/' + daysTotal + ' (' + progressPct + '%)</span><span>Admissions: ' + fmt(soFar) + '/' + fmt(projected) + ' (' + admPct + '%)</span></div>';
+    piHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-tertiary);margin-bottom:6px"><span>Days: ' + daysDone + '/' + daysTotal + ' (' + progressPct + '%)</span><span>Admissions: ' + fmt(soFar) + '/' + fmt(projected) + ' (' + admPct + '%)</span></div>';
     piHtml += '<div style="background:var(--border-light);border-radius:8px;height:10px;overflow:hidden">';
     piHtml += '<div style="background:var(--primary);height:100%;width:' + admPct + '%;border-radius:8px;transition:width 0.5s"></div>';
     piHtml += '</div>';
     piHtml += '</div>';
 
     piHtml += '<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:12px 18px;font-size:14px;color:var(--text);text-align:center">';
-    piHtml += '<strong>' + monthEndDate + '</strong> ko ye mahina khatam hoga. Us waqt tak lagbhag <strong>' + fmt(projected) + '</strong> admissions honge.';
+    piHtml += '<strong>' + monthEndDate + '</strong> is when this month ends. By then, approximately <strong>' + fmt(projected) + '</strong> total admissions are expected.';
     piHtml += '</div>';
   }
   rep.predictions = piHtml;
